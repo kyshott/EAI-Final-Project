@@ -4,7 +4,7 @@ import sounddevice as sd
 import tensorflow as tf
 import tkinter as tk
 
-interpreter = tf.lite.Interpreter(model_path="artifacts/autoencoder_int8.tflite")
+interpreter = tf.lite.Interpreter(model_path="../artifacts/autoencoder_int8.tflite")
 interpreter.allocate_tensors()
 input_index = interpreter.get_input_details()[0]["index"]
 output_index = interpreter.get_output_details()[0]["index"]
@@ -20,20 +20,25 @@ n_mfcc = 40
 # Window for anomaly visualization
 root = tk.Tk()
 root.title("Fan Sound Monitor")
-root.attributes("-fullscreen", True)  # full screen
 canvas = tk.Canvas(root, width=root.winfo_screenwidth(), height=root.winfo_screenheight())
 canvas.pack()
+
+def extract_mfcc_fixed(audio, sr, n_mfcc=40, target_frames=64):
+    mfcc = librosa.feature.mfcc(y=audio, sr=sr, n_mfcc=n_mfcc)
+    # Pad if too short
+    if mfcc.shape[1] < target_frames:
+        pad_width = target_frames - mfcc.shape[1]
+        mfcc = np.pad(mfcc, ((0,0),(0,pad_width)), mode='constant')
+    # Truncate if too long
+    else:
+        mfcc = mfcc[:, :target_frames]
+    return mfcc[np.newaxis, ..., np.newaxis].astype(np.float32)
 
 # Audio capture processing
 def audio_callback(indata, frames, time, status):
     audio = indata[:, 0]  # mono channel
 
-    # MFCC extraction
-    mfcc = librosa.feature.mfcc(y=audio, sr=sr, n_mfcc=n_mfcc)
-    W = mfcc.shape[1]
-    pad_w = (4 - W % 4) % 4
-    mfcc = np.pad(mfcc, ((0,0),(0,pad_w)), mode='constant')
-    mfcc_input = mfcc[np.newaxis, ..., np.newaxis].astype(np.float32)
+    mfcc_input = extract_mfcc_fixed(audio, sr, n_mfcc=40, target_frames=64)
 
     # Run TFLite inference
     interpreter.set_tensor(input_index, mfcc_input)
