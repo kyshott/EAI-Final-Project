@@ -3,4 +3,4 @@ librosa
 sounddevice
 tensorflow
 tkinter
-matplotlib
+psutil
