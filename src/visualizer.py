@@ -6,19 +6,19 @@ class MFCCVisualizer:
     def __init__(self, threshold, mfcc_dim=40):
         self.threshold = threshold
 
-        self.history = deque(maxlen=120)  # 120 windows stored
+        self.history = deque(maxlen=64)
 
         self.fig, (self.ax_mfcc, self.ax_err) = plt.subplots(2, 1, figsize=(6,8))
         
         # MFCC Spectrogram view
         self.img = self.ax_mfcc.imshow(
-            np.zeros((mfcc_dim, 120)),
+            np.zeros((mfcc_dim, 64)),
             origin='lower',
             aspect='auto',
-            cmap='plasma'
+            cmap='inferno'
         )
+        
         self.ax_mfcc.set_title("Live MFCC Stream")
-
         self.ax_err.set_title("Reconstruction Error")
         self.ax_err.set_xlim(0, 1)
         self.ax_err.set_ylim(0, threshold * 2)
@@ -30,6 +30,11 @@ class MFCCVisualizer:
         plt.show()
 
     def update(self, mfcc, error):
+
+        if mfcc.shape != (40, 64):
+            print("MFCC shape mismatch:", mfcc.shape)
+            return
+
         if mfcc.ndim == 2:
             col = np.mean(mfcc, axis=1)
         else:
