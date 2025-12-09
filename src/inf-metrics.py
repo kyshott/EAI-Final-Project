@@ -61,10 +61,13 @@ for i in range(num_runs):
     mem_usages.append(mem_info.rss / 1024**2)
     cpu_usages.append(process.cpu_percent(interval=None)) 
 
-avg_latency_ms = np.mean(latencies) * 1000
 avg_mem_mb = np.mean(mem_usages)
 avg_cpu_percent = np.mean(cpu_usages)
+latencies_ms = np.array(latencies) * 1000
+p50 = np.percentile(latencies_ms, 50)
+p95 = np.percentile(latencies_ms, 95)
 
-print(f"Average inference latency over {num_runs} runs: {avg_latency_ms:.2f} ms")
+print(f"P50 latency: {p50:.2f} ms")
+print(f"P95 latency: {p95:.2f} ms")
 print(f"Average memory usage (RSS): {avg_mem_mb:.2f} MB")
 print(f"Average CPU utilization: {avg_cpu_percent:.2f}%")
