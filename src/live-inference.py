@@ -3,7 +3,6 @@ import librosa
 import sounddevice as sd
 import tensorflow as tf
 import tkinter as tk
-import visualizer
 
 interpreter = tf.lite.Interpreter(model_path="../artifacts/autoencoder_int8.tflite")
 interpreter.allocate_tensors()
@@ -12,7 +11,7 @@ output_index = interpreter.get_output_details()[0]["index"]
 
 # MSE Threshold
 threshold_colab = 32.873253
-threshold_actual = 150.0 # Actual threshold from environment testing
+threshold_actual = 65 # Actual threshold from environment testing
 
 # Audio Parameters
 sr = 22050
@@ -20,7 +19,7 @@ env_freq = 44100 # Change to frequency of microphone used
 duration = 0.5   # Half a second windows
 n_mfcc = 40
 
-# Window for anomaly visualization
+# Window/gui setup
 root = tk.Tk()
 root.title("Fan Sound Monitor")
 canvas = tk.Canvas(root, width=root.winfo_screenwidth(), height=root.winfo_screenheight())

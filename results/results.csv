@@ -1,0 +1,2 @@
+timestamp,git_hash,platform,device,browser_name,browser_version,cpu/npu/gpu,dataset,split,seed,model_name,bundle_size_mb,model_size_kb,params_millions,latency_ms_p50,latency_ms_p95,tffi_ms,fps,peak_ram_mb,bandwidth_mb,power_w,metric_name,metric_value,notes
+12/09/2025 5:03 P.M.,hhh,sbc,Raspberry Pi 3 B+,N/A,N/A,cpu,DCASE: Unsupervised Anomalous Sound Detection for Machine Condition Monitoring under Domain Shifted Conditions,train=2407 test/val=602,42,N/A,2100,550,0.386529,61.55,81.57,85.98,N/A,549.06,N/A,N/A,mse,55.325775,N/A

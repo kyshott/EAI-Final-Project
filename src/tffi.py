@@ -2,6 +2,10 @@ import time
 import tensorflow as tf
 import numpy as np
 
+"""
+Time to first inference check
+"""
+
 start_load = time.time()
 interpreter = tf.lite.Interpreter(model_path="../artifacts/autoencoder_int8.tflite")
 interpreter.allocate_tensors()
