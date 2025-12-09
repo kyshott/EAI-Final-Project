@@ -3,6 +3,7 @@ import librosa
 import sounddevice as sd
 import tensorflow as tf
 import tkinter as tk
+import visualizer
 
 interpreter = tf.lite.Interpreter(model_path="../artifacts/autoencoder_int8.tflite")
 interpreter.allocate_tensors()
@@ -10,10 +11,12 @@ input_index = interpreter.get_input_details()[0]["index"]
 output_index = interpreter.get_output_details()[0]["index"]
 
 # MSE Threshold
-threshold = 32.873253
+threshold_colab = 32.873253
+threshold_actual = 150.0 # Actual threshold from environment testing
 
 # Audio Parameters
 sr = 22050
+env_freq = 44100 # Change to frequency of microphone used
 duration = 0.5   # Half a second windows
 n_mfcc = 40
 
@@ -25,38 +28,36 @@ canvas.pack()
 
 def extract_mfcc_fixed(audio, sr, n_mfcc=40, target_frames=64):
     mfcc = librosa.feature.mfcc(y=audio, sr=sr, n_mfcc=n_mfcc)
-    # Pad if too short
     if mfcc.shape[1] < target_frames:
         pad_width = target_frames - mfcc.shape[1]
         mfcc = np.pad(mfcc, ((0,0),(0,pad_width)), mode='constant')
-    # Truncate if too long
     else:
         mfcc = mfcc[:, :target_frames]
     return mfcc[np.newaxis, ..., np.newaxis].astype(np.float32)
 
+visualizer = visualizer.MFCCVisualizer(threshold=threshold_actual)
+
 # Audio capture processing
 def audio_callback(indata, frames, time, status):
-    audio = indata[:, 0]  # mono channel
+    audio = indata[:, 0].astype(np.float32)  # mono channel
+    audio = librosa.resample(audio, orig_sr=env_freq, target_sr=sr)
 
     mfcc_input = extract_mfcc_fixed(audio, sr, n_mfcc=40, target_frames=64)
 
-    # Run TFLite inference
     interpreter.set_tensor(input_index, mfcc_input)
     interpreter.invoke()
     reconstructed = interpreter.get_tensor(output_index)
 
-    # Compute reconstruction error
     error = np.mean((reconstructed - mfcc_input)**2)
 
-    # Update background color
-    color = "red" if error > threshold else "green"
+    visualizer.update(mfcc_input[0, :, :, 0], error)
+
+    color = "red" if error > threshold_actual else "green"
     canvas.configure(bg=color)
 
-# Actually start audio stream
 stream = sd.InputStream(channels=1, samplerate=sr, blocksize=int(sr*duration), callback=audio_callback)
 stream.start()
 
-# Run the gui loop
 root.mainloop()
 
 stream.stop()
