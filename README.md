@@ -25,6 +25,9 @@ For the tech stack itself, a variety of platforms, deployment environments & int
 
 <br>
 
+Finally, the microphone. This part was tricky, as adapting the microphone to fit the nature of the data and give good results was tricky. Thankfully, the microphone used had multiple settings for gain and pattern selection. The microphone used in this project was the [Blue Yeti](https://www.logitechg.com/en-us/shop/p/yeti-premium-usb-microphone), which has a default
+input frequency of 44100 Hz, which, of course, had to be resampled during inference (more on that later).
+
 ## Use Cases and Safety
 
 <br>
@@ -59,5 +62,36 @@ While it would be convenient to have the model directly ingest .wav files, doing
 
 While the general intuition would be to use waveform to find changes in frequency (thus indicating anomalous behavior), it is generally much less effective than using the other two spectrogram techniques. The reasoning for this is because of the highly intense computational cost of processing raw audio as well as the sensitivity to noise and artifacts that it may have. While it is the most "detailed" approach, it is definitely not suitable in this particular scenario (with an edge device).
 Ultimately, MFCC was chosen for the audio processing, as it allows for faster and more efficient computation. Generally, especially for CNNs, it can have weaker performance but is much less computationally expensive due to the lower dimensionality. Even with this, MFCC is still a great choice and gave great results (shown further down). For more complex environments that do not involve a singular device or (relatively) low-noise environments, mel-spectrogram may be more desirable.
+
+<br>
+
+![Example of processing techniques](mfccexample.png)
+
+*Image courtesy of [Vital Capacities](https://vitalcapacities.com/7613/)*
+
+<br>
+
+When actually processing the data, a number of decisions had to be made. These decisions were all related to normalizing the data; the length of each clip (and padding, if necessary), the number of coefficients to extract for reconstruction, and the frequency. Normalizing the data here is crucial, since we want to create a base truth for the autoencoder to know
+what the "normal" sounds of a fan are. By using the [librosa python package](https://librosa.org/doc/latest/index.html), converting the .wav files from the Kaggle dataset into workable, ingestible data was trivial. Additionally, a new column/axis was added at the end of the input tensors to represent the channel count.
+
+| **Frequency (Hz)** | **MFCC Count** | **Duration Clip (s)** | **Window Step Count (after padding)** |
+|--------------------|----------------|-----------------------|---------------------------------------|
+| 16000              | 40             | 2                     | 64                                    |
+
+<br>
+
+Then, the final step to handling the data is to pad the height and width of the data to become divisible by 4. The reasoning for this is since most maxpool, stride and downscale operations require compatible dimensionality. The actual operation involves taking the data, calculating how much padding is needed and applying it using numpy vectorization to add zeroes wherever needed. Now, the final dimension of each input tensor is **(40, 64, 1)**.
+
+<br>
+
+## Model Training Process
+
+<br>
+
+As it can be found in the **.ipynb file, located in the notebooks folder**, the model was trained as an autoencoder. There are numerous steps to actually performing this training, especially with creating the various layers of the CNN. Creating an autoencoder requires a specific structure, so the layers had to be selected carefully.
+To start, the model is put through 3 convolution layers using a 3x3 filter, each with an increasingly large number of filters of 16, 32 and 74. The first two layers use a stride of 2 to decrease dimensionality and perform the first step in creating a successful autoencoder. Then, a global average pool is done to prepare the bottleneck, and the bottleneck is converted into a 32 neuron dense layer to prepare the reconstruction. After this, the reconstruction begins by converting the data into a (10, 16, 64) tensor, then again to the original (40, 64, 1) tensor. Then, the model essentially works backwards using transpose Conv2D layers which help bring the data back to the original size. Then, the reconstructed data is compared to the original input data to calculate the reconstruction error. This is a lot to take in, so here is a visualization of the model and each layer:
+
+
+
 
 </div>
