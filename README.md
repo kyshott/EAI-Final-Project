@@ -72,6 +72,8 @@ an anomaly.
 This works in three steps - the autoencoder compresses the data into "bottleneck" representation, then learns the most effective and essential parts of the data. Then, the model will attempt to reconstruct the data based on what was learned, and will then output the 
 reconstruction loss function (MSE in this case). 
 
+In this specific case, a **convolutional autoencoder** is used instead of a traditional one, which means that, instead of using dense layers, Conv2D layers are used instead. Instead of Densing layers to the bottleneck, then densing them back up to size, the model uses convolution down to the bottleneck, then transpose convolution back up to size (see the model architecture image below).
+
 While it would be convenient to have the model directly ingest .wav files, doing so is impractical and impossible in most cases. In order for the model to understand the data, there are a handful of methods that may be employed to allow for the model to ingest:
 
 | **Mel-Spectrogram**                                                                                                                                                                       | **Mel-Frequency Cepstral Coefficients (MFCC)**                                                                                                                                                                                                                                                         | **Waveform**                                                                                                          |
