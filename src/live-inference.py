@@ -11,10 +11,10 @@ output_index = interpreter.get_output_details()[0]["index"]
 
 # MSE Threshold
 threshold_colab = 32.873253
-threshold_actual = 65 # Actual threshold from environment testing
+threshold_actual = 35 # Actual threshold from environment testing
 
 # Audio Parameters
-sr = 22050
+sr = 16000
 env_freq = 44100 # Change to frequency of microphone used
 duration = 0.5   # Half a second windows
 n_mfcc = 40
