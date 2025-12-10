@@ -44,6 +44,10 @@ environments where the sounds can be expected. With that being said, a lot of th
 
 Another important part to consider is that the training data is extremely unbalanced, as described by DCASE themselves. There are only **three** audio files in the training data set that are in the target domain, meaning that getting the model to have a high F1 score will be very challenging and potentially impossible. With this in mind, it must be noted that the F1 score will more than likely be in the 0.5-0.7 range, depending on how well the model performs.
 
+The [Kaggle Version](https://www.kaggle.com/datasets/pythonafroz/electrical-motor-anomaly-detection-from-sound-data) of the dataset was used, which made it easy to import into a Python notebook and immediately start working.
+
+<br>
+
 ## Use Cases and Safety
 
 <br>
