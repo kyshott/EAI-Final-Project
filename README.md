@@ -6,6 +6,7 @@
 <br>
 
 ### **[Click Here for a Project Demo Video](https://youtu.be/KDjHcplLObQ)**
+### **[Click Here for the Project Presentation](https://docs.google.com/presentation/d/1FL_8e_wcyTqyPQ5Z-h0x51LfUraXYYEs62VxdNBcKaE/edit?usp=sharing)**
 
 <br>
 
