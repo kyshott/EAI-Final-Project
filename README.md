@@ -5,6 +5,10 @@
 
 <br>
 
+### **[Click Here for a Project Demo Video](https://youtu.be/KDjHcplLObQ)**
+
+<br>
+
 This project utilizes an unsupervised autoencoder model trained on the [DCASE "Unsupervised Anomalous Sound Detection for Machine Condition Monitoring under Domain Shifted Conditions"](https://www.kaggle.com/datasets/pythonafroz/electrical-motor-anomaly-detection-from-sound-data) development data set.
 
 For testing purposes, only the *fan* data was used instead of the gearbox, valve or pump data. This was to decrease overall model size and make it easier to create an autoencoder, as this project is a proof of concept for running neural networks on edge devices.
@@ -162,6 +166,6 @@ Now, for the final results and model specifications. These can also be found in 
 
 <br>
 
-Overall, while there is room for improvement with the F1 score, the model actually did perform quite well in my environment at home, in my kitchen, with a simple desk fan. The model detected anomalies *specific* to the fan and did not detect false positives even when odd sounds were introduced to the environment (talking, snapping, clapping, etc). If you would like to see the demo video, you can click the link below to watch the model in action, running on a Raspberry Pi 3 B+.
+Overall, while there is room for improvement with the F1 score, the model actually did perform quite well in my environment at home, in my kitchen, with a simple desk fan. The model detected anomalies *specific* to the fan and did not detect false positives even when odd sounds were introduced to the environment (talking, snapping, clapping, etc). If you would like to see the demo video, you can click the link at the top of this readme to watch the model in action, running on a Raspberry Pi 3 B+.
 
 </div>
