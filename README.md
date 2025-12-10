@@ -26,14 +26,18 @@ For the tech stack itself, a variety of platforms, deployment environments & int
 <br>
 
 Finally, the microphone. This part was tricky, as adapting the microphone to fit the nature of the data and give good results was tricky. Thankfully, the microphone used had multiple settings for gain and pattern selection. The microphone used in this project was the [Blue Yeti](https://www.logitechg.com/en-us/shop/p/yeti-premium-usb-microphone), which has a default
-input frequency of 44100 Hz, which, of course, had to be resampled during inference (more on that later).
+sample rate of 44100 Hz, which, of course, had to be resampled during inference (more on that later).
 
 <br>
 
 ## The Data
 
+<br>
+
 As explained previously, the data is originally intended for [DCASE 2021 Challenge 2](https://dcase.community/challenge2021/task-unsupervised-detection-of-anomalous-sounds), which was to create an unsupervised model to perform anomaly detection on a variety of devices using electrical motors. The sounds in this dataset were obtained artificially, but in
-environments where the sounds can be expected. With that being said, a lot of the sounds are within environments that contain a lot of background noise (industrial, for example). This means that the data fed into the model is iherently relatively noisy, and the challenge comes with getting the model to separate the target object from its domain. The data provided has two test sets - anomalous sounds in the source domain for which the device training audio was recorded in, and anomalous sounds in the target domain. It is expected that the performance will be worse when performed against the target domain.
+environments where the sounds can be expected. With that being said, a lot of the sounds are within environments that contain a lot of background noise (industrial, for example). This means that the data fed into the model is iherently relatively noisy, and the challenge comes with getting the model to separate the target object from its domain. The data provided has two test sets - anomalous sounds in the source domain for which the device training audio was recorded in, and anomalous sounds in the target domain. The average of these two test sets will be retrieved when calculating the F1 score later.
+
+Another important part to consider is that the training data is extremely unbalanced, as described by DCASE themselves. There are only **three** audio files in the training data set that are in the target domain, meaning that getting the model to have a high F1 score will be very challenging and potentially impossible. With this in mind, it must be noted that the F1 score will more than likely be in the 0.5-0.7 range, depending on how well the model performs.
 
 ## Use Cases and Safety
 
@@ -115,12 +119,49 @@ While the model itself was not particularly large to begin with, performing quan
 
 ## Testing and F1 Scoring
 
+<br>
 
+Now, to test on the provided test data. The test data itself consists of 600 Test Domain audio files, and 600 source domain audio files. First, these files were iterated through, and an additional column was added to the data with a 0 or 1 depending on whether or not the file was considered "anomalous" or "normal" (as indicated by the file name). Then, the predictions were made using the autoencoder model, and prediction labels were created. After this, the f1 score was calculated between the actual and predicted labels, and the score was outputted. 
+
+| **Data Set**  | **F1 Score** | **Threshold Reconstruction MSE** |
+|---------------|--------------|----------------------------------|
+| Test Domain   | 0.6712       | > 9.0                            |
+| Source Domain | 0.6619       | > 9.0                            |
+
+As it can be seen, the F1 scores are actually quite good when compared to the nature of the data. While an F1 score of 0.6712 is considered *acceptable* at best, it is still very good given the circumstances. However, the adjustment for the threshold is what stands out here. With a threshold above 9, the F1 score drops to around 0.55 for both domains, which means that the model is definitely very highly sensitive to anomalous sounds. This is good to keep in mind when testing, as any deviation from the normal sound for the fan (and not its environment) will more than likely cause an anomaly detection to occur. A lower threshold here is also desirable, as it allows for detection of more subtle changes in the overall sound that may go undetected by human ears.
+
+<br>
 
 ## Inference & Live Audio Processing
 
 Now comes the fun part. Using the TFLite interpreter, inference can be performed on incoming input data. Using the sounddevices module, the mono audio input stream is taken in and converted to the proper sample frequency so the model can properly process it (using librosa). Then, the audio input is converted to MFCC, padding any extra frames that may not exist so that the window reaches 64 steps/frames. Then, the interpreter is invoked, and the input and output are compared to get the error.
 
 If you take a look at the code, you will notice that **tkinter** is used as well for a simple GUI. This GUI displays a window - **green** if the audio input is *normal* (as per the model), and red if it is *abonormal* (indicating an anomaly). This is for very base level testing, and proves that the model works properly for detecting anomalies in my target domain.
+
+Now, for the latency metrics. The latency is as follows:
+
+| **Latency (50th Percentile) (ms)** | **Latency (95th Percentile) (ms)** | 
+|-------------------------------|------------------------------|
+| 61.55                         | 81.57                        |
+
+<br>
+
+This is actually very good for an autoencoder/anomaly detection model. This means that for every inference performed, it takes a median of 61.55 ms to do, which is perfectly acceptable and works perfectly fine for a large range of window sizes when detecting audio input. 
+
+<br>
+
+## Final Results
+
+<br> 
+
+Now, for the final results and model specifications. These can also be found in the **results** folder in the form of a CSV file. These are important metrics that relate to the device's RAM, F1 score, repoducability metrics, etc.
+
+| **Seed** | **Split**                | **Bundle Size (MB)** | **Model Size (KB)** | **Params (M)** | **Latency (50th Percentile) (ms)** | **Latency (95th Percentile) (ms)** | **TTFI (MS)** | **Peak Ram Usage (MB)** | **F1 Score (Test Set)** |
+|----------|--------------------------|----------------------|---------------------|----------------|-------------------------------|------------------------------|---------------|-------------------------|-------------------------|
+| 42       | Train = 2407, Test = 602 | 2100                 | 550                 | 1.159589       | 61.55                         | 81.57                        | 85.98         | 549.06                  | 0.6712                  |
+
+<br>
+
+Overall, while there is room for improvement with the F1 score, the model actually did perform quite well in my environment at home, in my kitchen, with a simple desk fan. The model detected anomalies *specific* to the fan and did not detect false positives even when odd sounds were introduced to the environment (talking, snapping, clapping, etc). If you would like to see the demo video, you can click the link below to watch the model in action, running on a Raspberry Pi 3 B+.
 
 </div>
