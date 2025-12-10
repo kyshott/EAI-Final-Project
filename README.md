@@ -5,7 +5,7 @@
 
 <br>
 
-This project utilizes an autoencoder model trained on the [DCASE "Unsupervised Anomalous Sound Detection for Machine Condition Monitoring under Domain Shifted Conditions"](https://www.kaggle.com/datasets/pythonafroz/electrical-motor-anomaly-detection-from-sound-data) data set.
+This project utilizes an unsupervised autoencoder model trained on the [DCASE "Unsupervised Anomalous Sound Detection for Machine Condition Monitoring under Domain Shifted Conditions"](https://www.kaggle.com/datasets/pythonafroz/electrical-motor-anomaly-detection-from-sound-data) development data set.
 
 For testing purposes, only the *fan* data was used instead of the gearbox, valve or pump data. This was to decrease overall model size and make it easier to create an autoencoder, as this project is a proof of concept for running neural networks on edge devices.
 
@@ -27,6 +27,13 @@ For the tech stack itself, a variety of platforms, deployment environments & int
 
 Finally, the microphone. This part was tricky, as adapting the microphone to fit the nature of the data and give good results was tricky. Thankfully, the microphone used had multiple settings for gain and pattern selection. The microphone used in this project was the [Blue Yeti](https://www.logitechg.com/en-us/shop/p/yeti-premium-usb-microphone), which has a default
 input frequency of 44100 Hz, which, of course, had to be resampled during inference (more on that later).
+
+<br>
+
+## The Data
+
+As explained previously, the data is originally intended for [DCASE 2021 Challenge 2](https://dcase.community/challenge2021/task-unsupervised-detection-of-anomalous-sounds), which was to create an unsupervised model to perform anomaly detection on a variety of devices using electrical motors. The sounds in this dataset were obtained artificially, but in
+environments where the sounds can be expected. With that being said, a lot of the sounds are within environments that contain a lot of background noise (industrial, for example). This means that the data fed into the model is iherently relatively noisy, and the challenge comes with getting the model to separate the target object from its domain. The data provided has two test sets - anomalous sounds in the source domain for which the device training audio was recorded in, and anomalous sounds in the target domain. It is expected that the performance will be worse when performed against the target domain.
 
 ## Use Cases and Safety
 
@@ -84,14 +91,36 @@ Then, the final step to handling the data is to pad the height and width of the 
 
 <br>
 
-## Model Training Process
+## The Model
 
 <br>
 
 As it can be found in the **.ipynb file, located in the notebooks folder**, the model was trained as an autoencoder. There are numerous steps to actually performing this training, especially with creating the various layers of the CNN. Creating an autoencoder requires a specific structure, so the layers had to be selected carefully.
 To start, the model is put through 3 convolution layers using a 3x3 filter, each with an increasingly large number of filters of 16, 32 and 74. The first two layers use a stride of 2 to decrease dimensionality and perform the first step in creating a successful autoencoder. Then, a global average pool is done to prepare the bottleneck, and the bottleneck is converted into a 32 neuron dense layer to prepare the reconstruction. After this, the reconstruction begins by converting the data into a (10, 16, 64) tensor, then again to the original (40, 64, 1) tensor. Then, the model essentially works backwards using transpose Conv2D layers which help bring the data back to the original size. Then, the reconstructed data is compared to the original input data to calculate the reconstruction error. This is a lot to take in, so here is a visualization of the model and each layer:
 
+![Netron Model Visualizer](model_visual.png)
+
+<br>
+
+## Quantization
+
+While the model itself was not particularly large to begin with, performing quantization was another necessary step to preparing the model for running on a Raspberry Pi 3. In my case, I used INT8 Dynamic Range quantization, which performs quantization for activations during runtime instead of having fixed values, which results in generally better performance than full INT8. The weights do remain as static INT8, however. This was done by using the very useful [TFLite, now known as LiteRT](https://ai.google.dev/edge/litert) module. This module makes converting keras models into quantized tflite models trivial. Here are the model sizes before and after quantization:
+
+| **Model**      | **Size (MB)** |
+|----------------|---------------|
+| FP32 Baseline  | 4.70          |
+| INT8 Quantized | 0.55          |
+
+<br>
+
+## Testing and F1 Scoring
 
 
+
+## Inference & Live Audio Processing
+
+Now comes the fun part. Using the TFLite interpreter, inference can be performed on incoming input data. Using the sounddevices module, the mono audio input stream is taken in and converted to the proper sample frequency so the model can properly process it (using librosa). Then, the audio input is converted to MFCC, padding any extra frames that may not exist so that the window reaches 64 steps/frames. Then, the interpreter is invoked, and the input and output are compared to get the error.
+
+If you take a look at the code, you will notice that **tkinter** is used as well for a simple GUI. This GUI displays a window - **green** if the audio input is *normal* (as per the model), and red if it is *abonormal* (indicating an anomaly). This is for very base level testing, and proves that the model works properly for detecting anomalies in my target domain.
 
 </div>
