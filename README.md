@@ -175,4 +175,12 @@ Now, for the final results and model specifications. These can also be found in 
 
 Overall, while there is room for improvement with the F1 score, the model actually did perform quite well in my environment at home, in my kitchen, with a simple desk fan. The model detected anomalies *specific* to the fan and did not detect false positives even when odd sounds were introduced to the environment (talking, snapping, clapping, etc). If you would like to see the demo video, you can click the link at the top of this readme to watch the model in action, running on a Raspberry Pi 3 B+.
 
+<br>
+
+## Moving Forward
+
+Given all of the metrics retrieved from this project, there are definitely errors, especially in the F1 score, which definitely could have been better. Again, the data was intentionally made challenging to work with for domain-shifted conditions, but there could have been better optimization. I also could have tested on more fan devices / environments, but time did not allow for that unfortunately.
+
+In the future, this project could be expanded to have a more robust model for more domains and could be applicable across many different types of fans (and domains). While this was simply a proof of concept for getting the model to run effectively (in specific conditions) on an edge device, expanding capability is something that could have been and improved and is more than likely something I would add should I choose to work on this project in the future.
+
 </div>
